@@ -1,0 +1,10 @@
+[package]
+name = "nosubnormals"
+authors = ["Nico Chatzigianis"]
+version = "0.1.0"
+edition = "2021"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+description = "Enable/Disable subnormal floating point values"
+repository = "https://github.com/nicochatzi/nosubnormals-rs/"
+documentation = "https://docs.rs/nosubnormals-rs"
