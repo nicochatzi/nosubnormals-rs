@@ -18,8 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: pguyot/arm-runner-action@v2
-      with:
-        commands: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-          cargo test
+    - run: docker pull arm64v8/rust:latest
+    - run: |
+        docker run \
+          --platform linux/arm64/v8 \
+          -v $(pwd):/project \
+          -w /project \
+          arm64v8/rust \
+          bash -c "cargo test"

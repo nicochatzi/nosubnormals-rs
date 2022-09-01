@@ -1,5 +1,7 @@
 # Floating Point Subnormal Remover
 
+[![ci](https://github.com/nicochatzi/nosubnormals-rs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nicochatzi/nosubnormals-rs/actions/workflows/ci.yml)
+
 Stable, `no_std` and dependency-free crate to set and clear the Denormals As Zero (DAZ) and Flush To Zero (FTZ) flags for the FPU.
 
 Comes with a RAII-style "guard" to set-and-reset the flags within a given scope.
