@@ -21,8 +21,5 @@ jobs:
     - run: docker pull arm64v8/rust:latest
     - run: |
         docker run \
-          --platform linux/arm64/v8 \
-          -v $(pwd):/project \
-          -w /project \
-          arm64v8/rust \
+          --platform linux/arm64/v8 -v $(pwd):/project -w /project arm64v8/rust \
           bash -c "cargo test"

@@ -63,15 +63,15 @@ macro_rules! guard {
 
 #[cfg(test)]
 mod tests {
-    use crate::fpcr::tests::{Float, SUBNORMALS};
+    use crate::{assert_not_subnormal, assert_subnormal, fpcr::tests::{Float, SUBNORMALS}};
 
     #[test]
     fn can_reach_subnormals_without_the_guard() {
         for f in SUBNORMALS {
             assert!(f.is_subnormal());
             match f {
-                Float::F32(f) => assert_ne!(f, 0.),
-                Float::F64(f) => assert_ne!(f, 0.),
+                Float::F32(f) => assert_not_subnormal!(f),
+                Float::F64(f) => assert_not_subnormal!(f),
             }
         }
     }
@@ -83,8 +83,8 @@ mod tests {
         for f in SUBNORMALS {
             assert!(f.is_subnormal());
             match f {
-                Float::F32(f) => assert_eq!(f, 0.),
-                Float::F64(f) => assert_eq!(f, 0.),
+                Float::F32(f) => assert_subnormal!(f),
+                Float::F64(f) => assert_subnormal!(f),
             }
         }
     }
@@ -96,8 +96,8 @@ mod tests {
         for f in SUBNORMALS {
             assert!(f.is_subnormal());
             match f {
-                Float::F32(f) => assert_eq!(f, 0.),
-                Float::F64(f) => assert_eq!(f, 0.),
+                Float::F32(f) => assert_not_subnormal!(f),
+                Float::F64(f) => assert_not_subnormal!(f),
             }
         }
     }

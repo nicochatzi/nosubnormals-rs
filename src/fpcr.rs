@@ -15,6 +15,7 @@ pub(crate) mod reg {
         pub const DAZ: u32 = 1 << 6;
         pub const AUX: u32 = 0;
     }
+
     #[inline]
     pub fn read() -> u32 {
         unsafe { core::arch::x86_64::_mm_getcsr() }
@@ -40,15 +41,65 @@ pub(crate) mod reg {
 
     #[inline]
     pub fn read() -> u32 {
-        let mut v: u32;
-        unsafe { core::arch::asm!("mrs {:x}, fpcr", out(reg) v, options(nomem, nostack)) };
-        v
+        let mut val: u32;
+        unsafe { core::arch::asm!("mrs {:x}, fpcr", out(reg) val, options(nomem, nostack)) };
+        val
     }
 
     #[inline]
     pub fn write(val: u32) {
         unsafe { core::arch::asm!("msr fpcr, {:x}", in(reg) val, options(nomem, nostack)) }
     }
+}
+
+#[cfg(target_arch = "riscv64")]
+pub(crate) mod reg {
+    pub mod flags {
+        pub const RN: u32 = 0b00 << 5;
+        pub const RP: u32 = 0b11 << 5;
+        pub const RM: u32 = 0b10 << 5;
+        pub const RZ: u32 = 0b01 << 5;
+        pub const FTZ: u32 = 0;
+        pub const DAZ: u32 = 0;
+        pub const AUX: u32 = 0;
+    }
+
+    #[inline]
+    pub fn read() -> u32 {
+        let val: u32;
+        unsafe { core::arch::asm!("frcsr {}", out(reg) val, options(nomem, nostack)) };
+        val
+    }
+
+    #[inline]
+    pub fn write(val: u32) {
+        unsafe { core::arch::asm!("fscsr {}", in(reg) val, options(nomem, nostack)) };
+    }
+}
+
+#[cfg(not(any(
+    target_arch = "x86_64",
+    target_arch = "aarch64",
+    target_arch = "riscv64"
+)))]
+pub(crate) mod reg {
+    pub mod flags {
+        pub const RN: u32 = 0;
+        pub const RP: u32 = 0;
+        pub const RM: u32 = 0;
+        pub const RZ: u32 = 0;
+        pub const FTZ: u32 = 0;
+        pub const DAZ: u32 = 0;
+        pub const AUX: u32 = 0;
+    }
+
+    #[inline]
+    pub fn read() -> u32 {
+        0
+    }
+
+    #[inline]
+    pub fn write(_: u32) {}
 }
 
 pub(crate) const FLUSH_SUBNORMAL_TO_ZERO_MASK: u32 =
@@ -113,6 +164,33 @@ pub(crate) mod tests {
         }
     }
 
+    #[macro_export]
+    macro_rules! assert_not_subnormal {
+        ($val: expr) => {
+            assert_ne!($val, 0.)
+        };
+    }
+
+    #[macro_export]
+    macro_rules! assert_subnormal {
+        ($val: expr) => {{
+            #[cfg(any(
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+            ))]
+            {
+                assert_eq!($val, 0.)
+            }
+            #[cfg(not(any(
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+            )))]
+            {
+                assert_ne!($val, 0.)
+            }
+        }};
+    }
+
     #[test]
     fn can_disable_and_enable_subnormal() {
         for f in SUBNORMALS {
@@ -121,15 +199,15 @@ pub(crate) mod tests {
             disable_subnormal();
 
             match f {
-                Float::F32(f) => assert_eq!(f, 0.),
-                Float::F64(f) => assert_eq!(f, 0.),
+                Float::F32(f) => assert_subnormal!(f),
+                Float::F64(f) => assert_subnormal!(f),
             }
 
             enable_subnormal();
 
             match f {
-                Float::F32(f) => assert_ne!(f, 0.),
-                Float::F64(f) => assert_ne!(f, 0.),
+                Float::F32(f) => assert_not_subnormal!(f),
+                Float::F64(f) => assert_not_subnormal!(f),
             }
         }
     }

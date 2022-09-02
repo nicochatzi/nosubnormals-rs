@@ -19,30 +19,36 @@ the special case with microcode/alternate methods which can be slight performanc
 ```rust
 fn temporarily_disable_subnormals() {
     nosubnormals::guard!{}
-    let x = 1.0e-40;
-    assert_eq!(x, 0.);
+    assert_eq!(1.0e-40, 0.);
 }
 ```
 
 Testing is done with [cross-rs](https://github.com/cross-rs/cross)
 
 
-## Next Steps
+## Targets
 
-Some of the `core::instrinsics` could have been used but they seem to be behind a "catch-all" unstable
-library feature flag call `std::simd`.
+### Supported
+
+* `x86_64`: Can flush subnormals and change rounding modes.
+* `aarch64`: Can flush subnormals and change rounding modes.
+* `riscv64`: FPCR on RISCV cannot configure subnormal operations and it does not default to flushing to zero. Rounding modes are configurable. https://lists.riscv.org/g/tech/topic/76445971?p=Created,,,20,2,0,0::recentpostdate%2Fsticky,,,20,2,20,76445971
+
+### Future Support
+
+* `wasm`: still not ready to support control over IEEE-754 denormal flush to zero, relevant [PR](https://github.com/WebAssembly/design/pull/271) and [issue](https://github.com/WebAssembly/design/issues/1429)
+
+## Stability
+
+Unfortunately, many `core::instrinsics` in Rust are stuck behind a catch-all feature flag called `stdsimd` even though they are not technically unstable. This requires some targets to use inline assembly which use the same instructions are the corresponding `core::instrinsics` instructions.
+
+Some tracking links:
 
 * https://github.com/rust-lang/rust/issues/98253
 * https://github.com/rust-lang/stdarch/issues/1268
 * https://github.com/rust-lang/rust/issues/90972
 
+## Issues
 
-Some targets are not yet supported (RISCV, MIPS), [Rust targets](https://doc.rust-lang.org/rustc/platform-support.html#tier-1-with-host-tools)
-
-WASM is still not ready to support control over IEEE-754 denormal flush to zero.
-
-* https://github.com/WebAssembly/design/pull/271
-* https://github.com/WebAssembly/design/issues/1429
-
-NEON vmsr/vmrs instructions should be used.
+NEON vmsr/vmrs instructions should be used but does not seem to be recognised when compiling with cross..
 https://developer.arm.com/documentation/dui0489/i/neon-and-vfp-programming/vmrs?lang=en
